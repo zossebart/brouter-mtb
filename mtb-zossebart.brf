@@ -1,0 +1,542 @@
+#
+# mountainbike profile by zossebart
+# v1.0.0
+# see https://github.com/zossebart/brouter-mtb for information and releases
+#
+# CAUTION! always ride carefully, routing data and/or route calculation might not be accurate and safe at all times!
+#
+
+---context:global   # following code refers to global config
+
+assign   turnInstructionMode  = 1                 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
+
+# generate a bike route
+assign validForBikes            1
+assign validForCars             0
+assign validForFoot             0
+
+# Locus nav interface flags
+assign is_wet 0                                   # %is_wet%
+assign avoid_unpaved 1                            # %avoid_unpaved%
+                                                  # CAUTION!!! For the default routing mode, enable avoid unpaved flag in Locus,
+                                                  # otherwise more difficult routes are calculated!!!
+
+# derive the mtb hardness factor out of the avoid_unpaved Locus parameter
+assign mtb_hard_factor switch avoid_unpaved
+                                0                 # default mtb routing (xc/am)
+                                2                 # more difficult/demanding routes (enduro/freeride)
+
+# the global elevation parameters
+assign downhillcost             max 0 sub 30 multiply mtb_hard_factor 10
+assign downhillcutoff           4
+assign uphillcost               max 0 sub 40 multiply mtb_hard_factor 15
+assign uphillcutoff             1.5
+
+# elevation filtering parameters (tbd: optimized settings)
+assign elevationpenaltybuffer   10
+assign elevationmaxbuffer       10
+assign elevationreduce          0
+
+# ++++++++++++++++++++++++++++++++++++++ some global defines for finetuning
+
+assign voiceprio                2                  # 1: all ways have the same prio (max instructions)
+                                                   # 2: mtb prio, more instructions on different small way types
+assign mj_rd_penalty            0.5                # additional penalty for major roads for finetuning
+assign construction_penalty     3                  # penalty for roads in construction (oftentimes rideable by mtb)
+assign steps_penalty            max 0 sub 15 multiply mtb_hard_factor 5
+                                                   # penalty for steps
+assign steps_ramp_uh_penalty    5                  # penalty for uphill steps with a ramp (might be smaller than default steps penalty)
+assign steps_ramp_dh_penalty    2                  # penalty for downhill steps with a ramp (even smaller than uphill ramp)
+assign ferry_penalty            5000               # penalty for ferries
+assign private_penalty          6                  # penalty for private ways and nodes
+assign bicycle_no_penalty       5                  # penalty for ways and nodes with bicycle=no
+assign slippery_muddy_penalty   
+  switch is_wet     2 0                            # penalty for unpaved roads and tracks, which are tricky to ride when wet
+assign ford_penalty             max 0 sub 15 multiply mtb_hard_factor 8                 
+                                                   # penalty for fords (you might not want to get your feet wet ;-) )
+
+assign isbike_reduce            0.7                # penalty reduction for major roads with a cycleway
+assign isfoot_reduce            0.9                # penalty reduction for major roads with a footway or sidewalk
+
+# +++ special downhill parameters
+assign considerdownhill         1                  # use special penalties for downhills? (enables/disables below parameters)
+assign dh_penalty               max 0 add 2.0 multiply mtb_hard_factor 0.5
+                                                   # additional penalty for undesired downhills (e.g. major roads)
+assign dh_difficult_penalty     max 0 sub 10 multiply mtb_hard_factor 1                 
+                                                   # additional downhill penalty for ways with high difficulty (mtb/sac_scale)
+assign dh_use_tracks            lesser mtb_hard_factor 0                  
+                                                   # use less penalty for downhill tracks than for other waytypes? (0/1)
+                                                   # enables/disables dh_track_penalty
+assign dh_track_penalty         multiply 0.75 dh_penalty 
+                                                   # percentage of reduced downhill penalty for tracks
+
+# +++ special uphill parameters
+assign consideruphill           1                  # use special penalties for uphills? (enables/disables below parameters)
+assign uh_penalty               max 0 sub 2.5 multiply mtb_hard_factor 0.25
+                                                   # additional penalty for undesired uphills (e.g. paths)
+assign uh_difficult_penalty     max 0 sub 10 multiply mtb_hard_factor 1
+                                                   # additional uphill penalty for ways with high difficulty (mtb/sac_scale or mtb_scale_uphill)
+
+# ------------------------------------------- global defines end
+
+---context:way   # following code refers to way-tags
+
+#
+# pre-calculate some logical expressions
+#
+
+#
+# does the road have a footway or sidewalk?
+#
+assign has_sidewalk not or sidewalk= or sidewalk=no sidewalk=none
+assign has_footway not or footway= or footway=no footway=none
+assign has_foot or has_sidewalk has_footway
+
+#
+# does the road have a cycleway?
+#
+assign cycle not or cycleway= or cycleway=no or cycleway=none cycleway=proposed
+assign l_cycle not or cycleway:left= cycleway:left=no
+assign r_cycle not or cycleway:right= cycleway:right=no
+assign has_cycleway or cycle or l_cycle r_cycle
+
+#
+# is it a low-speed highway?
+#
+assign islowspeed
+  switch or maxspeed=10 or maxspeed=20 maxspeed=30 1
+  0
+
+#
+# is it a high-speed highway?
+#
+assign ishighspeed
+  switch
+  or maxspeed=60
+  or maxspeed=70
+  or maxspeed=80
+  or maxspeed=90
+  or maxspeed=100
+  or maxspeed=110
+  or maxspeed=120
+  or maxspeed=130
+     maxspeed=rural 1
+  0
+
+#
+# are there multiple lanes on the highway?
+#
+assign ismultilane
+  switch lanes=
+    0
+    switch or lanes=1
+           or lanes=2
+              lanes=1.5
+    0
+    1
+
+#
+# assign the penalty reduction for roads with sidewalks or cycleways
+#
+assign penalty_reduce switch has_cycleway isbike_reduce switch has_foot isfoot_reduce 1 
+
+#
+# is the road paved or unpaved?
+#
+assign ispaved 
+  or surface=paved 
+  or surface=asphalt 
+  or surface=concrete 
+  or surface=paving_stones 
+  or surface=grass_paver 
+  or surface=metal
+  or surface=wood
+  surface=compacted
+assign isunpaved not or surface= ispaved
+
+#
+# is the surface potentially slippery or muddy when it's wet?
+#
+assign surfacebadwhenwet and isunpaved not or surface=compacted surface=fine_gravel
+assign highwaybadwhenwet or highway=path or tracktype=grade5 or tracktype=grade4 highway=bridleway
+assign isbadwhenwet or surfacebadwhenwet highwaybadwhenwet
+
+assign any_cycleroute or route_bicycle_icn=yes or route_bicycle_ncn=yes or route_bicycle_rcn=yes route_bicycle_lcn=yes
+
+#
+# get the inclination (up=1, down =-1, unknown=0)
+#
+assign inclination
+switch incline=         0
+  switch or incline=yes
+         or incline=up
+         or incline=5%
+         or incline=8%
+         or incline=10%
+         or incline=15%
+         or incline=20%
+         or incline=25%
+            incline=30%  switch reversedirection=yes -1 1
+  switch or incline=down
+         or incline=-5%
+         or incline=-8%
+         or incline=-10%
+         or incline=-15%
+         or incline=-20%
+         or incline=-25%
+            incline=-30% switch reversedirection=yes 1 -1
+  0
+
+
+#
+# precalculate steps penaltys
+#
+assign steps_uh_penalty
+  switch or ramp:stroller=yes ramp:bicycle=yes 
+    steps_ramp_uh_penalty
+    multiply 1.2 add uh_penalty steps_penalty                 # boost steps uphill penalty even more
+
+assign steps_dh_penalty
+  switch or ramp:stroller=yes ramp:bicycle=yes 
+    steps_ramp_dh_penalty
+    add dh_penalty steps_penalty
+
+
+#
+# base penalties for roadtypes
+#
+assign hw_penalty
+  switch or highway=motorway highway=motorway_link          9999
+  switch    highway=proposed                                9999
+  switch    highway=construction                            construction_penalty
+  0
+
+assign hw_major_penalty
+  multiply  switch islowspeed 0.75 1                           # reduce the penalty if the speedlimit is low
+  multiply  max 1 multiply ishighspeed 1.2                     # rise the penalty if the speedlimit is high
+  multiply  max 1 multiply ismultilane 1.2                     # rise the penalty if there are more than 2 lanes  
+  switch or highway=trunk highway=trunk_link                 add mj_rd_penalty 10
+  switch or highway=primary highway=primary_link             add mj_rd_penalty 6.0
+  switch or highway=secondary highway=secondary_link         add mj_rd_penalty 2.6
+  switch or highway=tertiary highway=tertiary_link           add mj_rd_penalty 2.3
+  switch    highway=unclassified                             add mj_rd_penalty 2.2
+  0
+
+assign hw_minor_penalty
+  multiply  max 1 multiply ishighspeed 1.2                     # rise the penalty if the speedlimit is high
+  multiply  max 1 multiply ismultilane 1.2                     # rise the penalty if there are more than 2 lanes
+  switch    highway=residential                              1.2
+  switch    highway=service                                  1.1
+  switch    highway=living_street                            1.1
+  switch    highway=pedestrian                               1.1
+  switch    highway=footway                                  1.1
+  0
+
+#
+# additional penalties for other road attributes
+#
+assign mtb_sac_penalty 
+  max 0 multiply sub 1 multiply mtb_hard_factor 0.25
+  switch or mtb:scale=3 or mtb:scale=2+ sac_scale=demanding_mountain_hiking 2
+  switch or mtb:scale=4 sac_scale=alpine_hiking             4
+  switch or mtb:scale=5 sac_scale=demanding_alpine_hiking   50
+  switch or mtb:scale=6 sac_scale=difficult_alpine_hiking   100
+  0
+
+assign mtb_uh_penalty #(supported since 1.4.4)
+  max 0 multiply sub 1 multiply mtb_hard_factor 0.25
+  switch mtb:scale:uphill=3 2
+  switch mtb:scale:uphill=4 4
+  switch mtb:scale:uphill=5 50
+  switch mtb:scale=6        100
+  0
+
+assign tracktype_penalty
+  max 0 multiply sub 1 multiply mtb_hard_factor 0.5
+  switch tracktype=grade5                                   0.2
+  0
+
+assign traffic_penalty
+  multiply 0.3
+    switch estimated_traffic_class=1    0
+    switch estimated_traffic_class=2    1
+    switch estimated_traffic_class=3    2
+    switch estimated_traffic_class=4    3
+    switch estimated_traffic_class=5    4
+    switch estimated_traffic_class=6    5
+    switch estimated_traffic_class=7    6
+    0
+
+#
+# implicit access here just from the motorroad tag
+# (implicit access rules from highway tag handled elsewhere)
+#
+assign defaultaccess
+  switch access=
+    not motorroad=yes
+    switch access=no
+      0
+      switch access=private
+        0
+        1
+
+#
+# calculate logical bike access
+#
+assign bikeaccess
+  or any_cycleroute
+    switch bicycle=
+      switch vehicle=
+        defaultaccess
+        switch or vehicle=private vehicle=no
+          0
+          1
+    switch not bicycle=private
+      1
+      0
+
+#
+# calculate logical foot access
+#
+assign footaccess
+  or bikeaccess
+  or bicycle=dismount
+    switch foot=
+      defaultaccess
+      not or foot=private foot=no
+
+#
+# combine to penalty for access
+#
+assign access_penalty 
+switch bikeaccess 
+  switch bicycle=no                                           # bike access granted from above, but check for bicycle=no
+    bicycle_no_penalty                                        # access with penalty for bicycle=no  
+    switch bicycle=dismount                                   # bike access granted from above, but check for bicycle=dismount
+    multiply 0.2 bicycle_no_penalty                           # access with penalty for bicycle=dismount
+    0                                                         # full bike access
+  switch or access=private
+         or bicycle=private
+         or vehicle=private
+            foot=private
+    private_penalty                                           # access with penalty for private
+    100000                                                    # absolutely no access
+
+#
+# combine additional penalys which are common for flat, up and down ways
+#
+assign misc_penalty
+  add access_penalty
+  add traffic_penalty
+  add switch not ford=                    ford_penalty
+      0
+  add switch trail_visibility=bad         2
+      switch trail_visibility=horrible    5
+      switch trail_visibility=no          15
+      0
+  add switch smoothness=impassable        10
+      0
+  max 0 multiply sub 1 multiply mtb_hard_factor 0.3333
+  add switch surfacebadwhenwet            slippery_muddy_penalty
+      0
+  add switch highwaybadwhenwet            slippery_muddy_penalty
+      0
+  switch or surface=sand surface=mud  3
+      0
+
+
+#
+# now assign the parameters for the routing engine (initialcost, turncost and flat/up/down costfactors)
+#
+assign turncost 
+  switch or highway=path highway=footway
+    switch equal inclination -1 0 10
+    switch highway=track 50 150
+
+#
+# assign parameters for turn instruction generation
+#
+assign priorityclassifier
+  switch equal voiceprio 1 1
+  switch equal voiceprio 2
+       if ( highway=motorway                  ) then  101
+  else if ( highway=motorway_link             ) then  100
+  else if ( highway=trunk                     ) then  91
+  else if ( highway=trunk_link                ) then  90
+  else if ( highway=primary                   ) then  88
+  else if ( highway=primary_link              ) then  87
+  else if ( highway=secondary                 ) then  86
+  else if ( highway=secondary_link            ) then  85
+  else if ( highway=tertiary                  ) then  84
+  else if ( highway=tertiary_link             ) then  83
+  else if ( highway=unclassified              ) then  82
+  else if ( highway=residential|living_street ) then  50
+  else if ( highway=service                   ) then  40
+  else if ( highway=road                      ) then  35  
+  else if ( highway=cycleway                  ) then  30
+  else if ( highway=bridleway|track           ) then  20
+  else if ( highway=footway|pedestrian        ) then  17
+  else if ( highway=steps                     ) then  15
+  else if ( highway=path                      ) then  10
+    else 0
+  0
+
+assign isroundabout = junction=roundabout
+assign islinktype = highway=motorway_link|trunk_link|primary_link|secondary_link|tertiary_link
+assign isgoodforcars = if greater priorityclassifier 30 then true
+                  else if highway=residential|living_street|service then true
+                  else if ( and highway=track tracktype=grade1 ) then true
+                  else false
+
+# ... encoded into a bitmask
+
+assign classifiermask add multiply isroundabout   4
+                      add multiply islinktype     8
+                          multiply isgoodforcars 16
+
+assign turnInstructionRoundabouts = 1
+assign turnInstructionCatchingRange = 4
+
+
+assign initialcost 
+  switch    route=ferry
+    ferry_penalty
+    0
+
+#
+# costfactor for flat terrain
+#
+assign costfactor
+  switch and highway= not route=ferry 100000
+    min 9999
+    add misc_penalty
+    add switch and equal inclination 1  mtb_uh_penalty
+          add switch consideruphill uh_difficult_penalty 0 mtb_uh_penalty
+          mtb_sac_penalty
+    add tracktype_penalty
+    max 1
+    switch hw_penalty hw_penalty
+    switch hw_major_penalty hw_major_penalty
+    switch hw_minor_penalty hw_minor_penalty
+
+    switch    highway=path                              1
+    switch    highway=steps                             
+      switch    equal inclination 1   steps_uh_penalty
+        switch    equal inclination -1   steps_dh_penalty
+          switch reversedirection=yes 
+            steps_dh_penalty
+            steps_uh_penalty
+    switch    or highway=track highway=bridleway        1
+    switch    highway=cycleway                          max 1 add 1.1 multiply mtb_hard_factor 0.1
+
+    40 # default for any other highway type not handled above
+
+#
+# costfactor for uphills
+#
+assign uphillcostfactor
+  switch consideruphill
+    switch and highway= not route=ferry 100000
+      min 9999
+      add misc_penalty
+      add switch and equal inclination 1 mtb_uh_penalty
+          add uh_difficult_penalty mtb_uh_penalty
+          switch mtb_sac_penalty add uh_difficult_penalty mtb_sac_penalty 0 
+      add switch tracktype_penalty add uh_difficult_penalty tracktype_penalty 0
+      max 1
+      switch hw_penalty hw_penalty
+      switch hw_major_penalty multiply penalty_reduce hw_major_penalty
+      switch hw_minor_penalty hw_minor_penalty 
+
+      switch    highway=path                              uh_penalty
+      switch    highway=steps                             # first try to use incline
+        switch    equal inclination 1   steps_uh_penalty
+        switch    equal inclination -1   steps_dh_penalty
+                  steps_uh_penalty                        # no incline tag, assume step is really uphill
+      switch    highway=track                             1
+      switch    highway=bridleway                         1.2
+      switch    highway=cycleway                          1
+
+      40 # default for any other highway type not handled above
+  0 # no special handling for uphill selected, flat costfactor will be used instead
+
+#
+# costfactor for downhills
+#
+assign downhillcostfactor 
+  switch considerdownhill
+    switch and highway= not route=ferry 100000
+      min 9999
+      add misc_penalty
+      add switch and equal inclination 1 mtb_uh_penalty
+          add switch consideruphill uh_difficult_penalty 0 mtb_uh_penalty
+          switch mtb_sac_penalty add dh_difficult_penalty mtb_sac_penalty 0
+      add switch tracktype_penalty add dh_difficult_penalty tracktype_penalty 0
+      max 1
+      switch hw_penalty add dh_penalty hw_penalty
+      switch hw_major_penalty add dh_penalty hw_major_penalty
+      switch hw_minor_penalty add dh_penalty hw_minor_penalty
+
+      switch    highway=path                              1
+      switch    highway=steps                             # first try to use incline
+        switch    equal inclination 1   steps_uh_penalty
+        switch    equal inclination -1   steps_dh_penalty
+                  steps_dh_penalty                        # no incline tag, assume step is really downhill
+      switch    or highway=track highway=bridleway
+        switch  dh_use_tracks                             dh_track_penalty dh_penalty
+      switch    highway=cycleway                          add dh_penalty 0.5
+
+      40 # default for any other highway type not handled above
+  0 # no special handling for downhill selected, flat costfactor will be used instead
+
+---context:node  # following code refers to node tags
+
+assign defaultaccess
+  switch access=
+    switch or barrier=gate 
+           or barrier=fence 
+           or barrier=door 
+              barrier=wall
+      0 
+      1 
+    switch or access=private 
+              access=no
+      0
+      1
+
+assign bikeaccess
+  or nodeaccessgranted=yes
+  switch bicycle=
+    switch vehicle=
+      defaultaccess
+      switch or vehicle=private 
+                vehicle=no
+        0
+        1
+    switch or bicycle=private 
+           or bicycle=no 
+              bicycle=dismount
+      0
+      1
+
+assign footaccess
+  or bicycle=dismount
+  switch foot=
+    defaultaccess
+    switch or foot=private
+              foot=no
+      0
+      1
+
+assign initialcost 
+  add  switch highway=traffic_signals 100 0
+  switch and or bikeaccess footaccess not highway=elevator
+    switch or not ford= highway=ford
+      multiply 100 ford_penalty
+      0
+#    switch  or access=private
+#            or bicycle=private
+#            or vehicle=private
+#            foot=private
+#      multiply 100 private_penalty   # access with penalty
+      1000000
