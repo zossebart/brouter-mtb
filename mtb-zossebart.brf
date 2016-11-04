@@ -89,14 +89,14 @@ assign uh_difficult_penalty     = max 0 sub 10 multiply mtb_hard_factor 1
 #
 # does the road have a footway or sidewalk?
 #
-assign has_sidewalk             = not or sidewalk= or sidewalk=no sidewalk=none
-assign has_footway              = not or footway= or footway=no footway=none
+assign has_sidewalk             = not or sidewalk= sidewalk=no|none
+assign has_footway              = not or footway= footway=no|none
 assign has_foot                 = or has_sidewalk has_footway
 
 #
 # does the road have a cycleway?
 #
-assign cycle                    = not or cycleway= or cycleway=no or cycleway=none cycleway=proposed
+assign cycle                    = not or cycleway= cycleway=no|none|proposed
 assign l_cycle                  = not or cycleway:left= cycleway:left=no
 assign r_cycle                  = not or cycleway:right= cycleway:right=no
 assign has_cycleway             = or cycle or l_cycle r_cycle
@@ -104,25 +104,16 @@ assign has_cycleway             = or cycle or l_cycle r_cycle
 #
 # is it a low-speed highway?
 #
-assign islowspeed               = switch or maxspeed=10 or maxspeed=20 maxspeed=30 
+assign islowspeed               = switch maxspeed=10|20|30 
                                 1
                                 0
 
 #
 # is it a high-speed highway?
 #
-assign ishighspeed =
-  switch
-  or maxspeed=60
-  or maxspeed=70
-  or maxspeed=80
-  or maxspeed=90
-  or maxspeed=100
-  or maxspeed=110
-  or maxspeed=120
-  or maxspeed=130
-     maxspeed=rural 1
-  0
+assign ishighspeed              = switch maxspeed=60|70|80|90|100|110|120|130|rural
+                                1
+                                0
 
 #
 # are there multiple lanes on the highway?
@@ -130,11 +121,9 @@ assign ishighspeed =
 assign ismultilane =
   switch lanes=
     0
-    switch or lanes=1
-           or lanes=2
-              lanes=1.5
-    0
-    1
+    switch lanes=1|1.5|2
+      0
+      1
 
 #
 # assign the penalty reduction for roads with sidewalks or cycleways
@@ -148,15 +137,7 @@ assign penalty_reduce           = switch has_cycleway
 #
 # is the road paved or unpaved?
 #
-assign ispaved =
-  or surface=paved 
-  or surface=asphalt 
-  or surface=concrete 
-  or surface=paving_stones 
-  or surface=grass_paver 
-  or surface=metal
-  or surface=wood
-  surface=compacted
+assign ispaved                  = surface=paved|asphalt|concrete|paving_stones|grass_paver|metal|wood|compacted
 
 assign isunpaved                = not or surface= ispaved
 
@@ -164,33 +145,24 @@ assign isunpaved                = not or surface= ispaved
 # is the surface potentially slippery or muddy when it's wet?
 #
 assign surfacebadwhenwet        = and isunpaved not or surface=compacted surface=fine_gravel
-assign highwaybadwhenwet        = or highway=path or tracktype=grade5 or tracktype=grade4 highway=bridleway
+assign highwaybadwhenwet        = or highway=path or tracktype=grade5|grade4 highway=bridleway
 assign isbadwhenwet             = or surfacebadwhenwet highwaybadwhenwet
 
 assign any_cycleroute           = or route_bicycle_icn=yes or route_bicycle_ncn=yes or route_bicycle_rcn=yes route_bicycle_lcn=yes
 
 #
-# get the inclination (up=1, down =-1, unknown=0)
+# get the inclination (up=1, down=-1, unknown=0)
 #
 assign inclination =
 switch incline=         0
-  switch or incline=yes
-         or incline=up
-         or incline=5%
-         or incline=8%
-         or incline=10%
-         or incline=15%
-         or incline=20%
-         or incline=25%
-            incline=30%  switch reversedirection=yes -1 1
-  switch or incline=down
-         or incline=-5%
-         or incline=-8%
-         or incline=-10%
-         or incline=-15%
-         or incline=-20%
-         or incline=-25%
-            incline=-30% switch reversedirection=yes 1 -1
+  switch incline=yes|up|5%|8%|10%|15%|20%|25%|30%
+    switch reversedirection=yes
+      -1
+      1
+  switch incline=down|-5%|-8%|-10%|-15%|-20%|-25%|-30%
+    switch reversedirection=yes
+      1
+      -1
   0
 
 
@@ -212,19 +184,19 @@ assign steps_dh_penalty =
 # base penalties for roadtypes
 #
 assign hw_penalty =
-  switch or highway=motorway highway=motorway_link          9999
-  switch    highway=proposed                                9999
-  switch    highway=construction                            construction_penalty
+  switch highway=motorway|motorway_link                     9999
+  switch highway=proposed                                   9999
+  switch highway=construction                               construction_penalty
   0
 
 assign hw_major_penalty =
   multiply  switch islowspeed 0.75 1                           # reduce the penalty if the speedlimit is low
   multiply  max 1 multiply ishighspeed 1.2                     # rise the penalty if the speedlimit is high
   multiply  max 1 multiply ismultilane 1.2                     # rise the penalty if there are more than 2 lanes  
-  switch or highway=trunk highway=trunk_link                 add mj_rd_penalty 10
-  switch or highway=primary highway=primary_link             add mj_rd_penalty 6.0
-  switch or highway=secondary highway=secondary_link         add mj_rd_penalty 2.6
-  switch or highway=tertiary highway=tertiary_link           add mj_rd_penalty 2.3
+  switch    highway=trunk|trunk_link                         add mj_rd_penalty 10
+  switch    highway=primary|primary_link                     add mj_rd_penalty 6.0
+  switch    highway=secondary|secondary_link                 add mj_rd_penalty 2.6
+  switch    highway=tertiary|tertiary_link                   add mj_rd_penalty 2.3
   switch    highway=unclassified                             add mj_rd_penalty 2.2
   0
 
@@ -243,7 +215,7 @@ assign hw_minor_penalty =
 #
 assign mtb_sac_penalty =
   max 0 multiply sub 1 multiply mtb_hard_factor 0.25
-  switch or mtb:scale=3 or mtb:scale=2+ sac_scale=demanding_mountain_hiking 2
+  switch or mtb:scale=3|2+ sac_scale=demanding_mountain_hiking 2
   switch or mtb:scale=4 sac_scale=alpine_hiking             4
   switch or mtb:scale=5 sac_scale=demanding_alpine_hiking   50
   switch or mtb:scale=6 sac_scale=difficult_alpine_hiking   100
@@ -294,7 +266,7 @@ assign bikeaccess =
     switch bicycle=
       switch vehicle=
         defaultaccess
-        switch or vehicle=private vehicle=no
+        switch vehicle=private|no
           0
           1
     switch not bicycle=private
@@ -309,7 +281,7 @@ assign footaccess =
   or bicycle=dismount
     switch foot=
       defaultaccess
-      not or foot=private foot=no
+      not foot=private|no
 
 #
 # combine to penalty for access
@@ -347,7 +319,7 @@ assign misc_penalty =
       0
   add switch highwaybadwhenwet            slippery_muddy_penalty
       0
-  switch or surface=sand surface=mud  3
+  switch surface=sand|mud                 3
       0
 
 
@@ -355,7 +327,7 @@ assign misc_penalty =
 # now assign the parameters for the routing engine (initialcost, turncost and flat/up/down costfactors)
 #
 assign turncost =
-  switch or highway=path highway=footway
+  switch highway=path|footway
     switch equal inclination -1 0 10
     switch highway=track 50 150
 
@@ -432,7 +404,7 @@ assign costfactor =
           switch reversedirection=yes 
             steps_dh_penalty
             steps_uh_penalty
-    switch    or highway=track highway=bridleway        1
+    switch    highway=track|bridleway                   1
     switch    highway=cycleway                          max 1 add 1.1 multiply mtb_hard_factor 0.1
 
     40 # default for any other highway type not handled above
@@ -488,7 +460,7 @@ assign downhillcostfactor =
         switch    equal inclination 1   steps_uh_penalty
         switch    equal inclination -1   steps_dh_penalty
                   steps_dh_penalty                        # no incline tag, assume step is really downhill
-      switch    or highway=track highway=bridleway
+      switch    highway=track|bridleway
         switch  dh_use_tracks                             dh_track_penalty dh_penalty
       switch    highway=cycleway                          add dh_penalty 0.5
 
@@ -499,14 +471,10 @@ assign downhillcostfactor =
 
 assign defaultaccess =
   switch access=
-    switch or barrier=gate 
-           or barrier=fence 
-           or barrier=door 
-              barrier=wall
+    switch barrier=gate|fence|door|wall
       0 
       1 
-    switch or access=private 
-              access=no
+    switch access=private|no
       0
       1
 
@@ -519,9 +487,7 @@ assign bikeaccess =
                 vehicle=no
         0
         1
-    switch or bicycle=private 
-           or bicycle=no 
-              bicycle=dismount
+    switch bicycle=private|no|dismount
       0
       1
 
@@ -529,8 +495,7 @@ assign footaccess =
   or bicycle=dismount
   switch foot=
     defaultaccess
-    switch or foot=private
-              foot=no
+    switch foot=private|no
       0
       1
 
