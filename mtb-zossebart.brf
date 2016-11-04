@@ -11,13 +11,13 @@
 assign turnInstructionMode      = 1               # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 
 # generate a bike route
-assign validForBikes            = 1
-assign validForCars             = 0
-assign validForFoot             = 0
+assign validForBikes            = true
+assign validForCars             = false
+assign validForFoot             = false
 
 # Locus nav interface flags
-assign is_wet                   = 0               # %is_wet%
-assign avoid_unpaved            = 1               # %avoid_unpaved%
+assign is_wet                   = false           # %is_wet%
+assign avoid_unpaved            = true            # %avoid_unpaved%
                                                   # CAUTION!!! For the default routing mode, enable avoid unpaved flag in Locus,
                                                   # otherwise more difficult routes are calculated!!!
 
@@ -53,26 +53,26 @@ assign bicycle_no_penalty       = 5                # penalty for ways and nodes 
 assign slippery_muddy_penalty   = switch is_wet    # penalty for unpaved roads and tracks, which are tricky to ride when wet
                                 2
                                 0
-assign ford_penalty             = max 0 sub 15 multiply mtb_hard_factor 8                 
+assign ford_penalty             = max 0 sub 15 multiply mtb_hard_factor 8
                                                    # penalty for fords (you might not want to get your feet wet ;-) )
 
 assign isbike_reduce            = 0.7              # penalty reduction for major roads with a cycleway
 assign isfoot_reduce            = 0.9              # penalty reduction for major roads with a footway or sidewalk
 
 # +++ special downhill parameters
-assign considerdownhill         = 1                # use special penalties for downhills? (enables/disables below parameters)
+assign considerdownhill         = true             # use special penalties for downhills? (enables/disables below parameters)
 assign dh_penalty               = max 0 add 2.0 multiply mtb_hard_factor 0.5
                                                    # additional penalty for undesired downhills (e.g. major roads)
 assign dh_difficult_penalty     = max 0 sub 10 multiply mtb_hard_factor 1                 
                                                    # additional downhill penalty for ways with high difficulty (mtb/sac_scale)
-assign dh_use_tracks            = lesser mtb_hard_factor 0                  
+assign dh_use_tracks            = lesser mtb_hard_factor false
                                                    # use less penalty for downhill tracks than for other waytypes? (0/1)
                                                    # enables/disables dh_track_penalty
 assign dh_track_penalty         = multiply 0.75 dh_penalty 
                                                    # percentage of reduced downhill penalty for tracks
 
 # +++ special uphill parameters
-assign consideruphill           = 1                # use special penalties for uphills? (enables/disables below parameters)
+assign consideruphill           = true             # use special penalties for uphills? (enables/disables below parameters)
 assign uh_penalty               = max 0 sub 2.5 multiply mtb_hard_factor 0.25
                                                    # additional penalty for undesired uphills (e.g. paths)
 assign uh_difficult_penalty     = max 0 sub 10 multiply mtb_hard_factor 1
@@ -105,25 +105,25 @@ assign has_cycleway             = or cycle or l_cycle r_cycle
 # is it a low-speed highway?
 #
 assign islowspeed               = switch maxspeed=10|20|30 
-                                1
-                                0
+                                true
+                                false
 
 #
 # is it a high-speed highway?
 #
 assign ishighspeed              = switch maxspeed=60|70|80|90|100|110|120|130|rural
-                                1
-                                0
+                                true
+                                false
 
 #
 # are there multiple lanes on the highway?
 #
 assign ismultilane =
   switch lanes=
-    0
+    false
     switch lanes=1|1.5|2
-      0
-      1
+      false
+      true
 
 #
 # assign the penalty reduction for roads with sidewalks or cycleways
@@ -253,10 +253,10 @@ assign defaultaccess =
   switch access=
     not motorroad=yes
     switch access=no
-      0
+      false
       switch access=private
-        0
-        1
+        false
+        true
 
 #
 # calculate logical bike access
@@ -267,11 +267,11 @@ assign bikeaccess =
       switch vehicle=
         defaultaccess
         switch vehicle=private|no
-          0
-          1
+          false
+          true
     switch not bicycle=private
-      1
-      0
+      true
+      false
 
 #
 # calculate logical foot access
@@ -301,7 +301,7 @@ switch bikeaccess
     100000                                                    # absolutely no access
 
 #
-# combine additional penalys which are common for flat, up and down ways
+# combine additional penaltys which are common for flat, up and down ways
 #
 assign misc_penalty =
   add access_penalty
@@ -472,11 +472,11 @@ assign downhillcostfactor =
 assign defaultaccess =
   switch access=
     switch barrier=gate|fence|door|wall
-      0 
-      1 
+      false 
+      true 
     switch access=private|no
-      0
-      1
+      false
+      true
 
 assign bikeaccess =
   or nodeaccessgranted=yes
@@ -485,19 +485,19 @@ assign bikeaccess =
       defaultaccess
       switch or vehicle=private 
                 vehicle=no
-        0
-        1
+        false
+        true
     switch bicycle=private|no|dismount
-      0
-      1
+      false
+      true
 
 assign footaccess =
   or bicycle=dismount
   switch foot=
     defaultaccess
     switch foot=private|no
-      0
-      1
+      false
+      true
 
 assign initialcost =
   add  switch highway=traffic_signals 100 0
