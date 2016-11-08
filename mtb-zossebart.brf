@@ -22,9 +22,9 @@ assign avoid_unpaved            = true            # %avoid_unpaved%
                                                   # otherwise more difficult routes are calculated!!!
 
 # derive the mtb hardness factor out of the avoid_unpaved Locus parameter
-assign mtb_hard_factor          = switch avoid_unpaved
-                                0                 # default mtb routing (xc/am)
-                                2                 # more difficult/demanding routes (enduro/freeride)
+assign mtb_hard_factor          = if avoid_unpaved
+                                    then 0        # default mtb routing (xc/am)
+                                    else 2        # more difficult/demanding routes (enduro/freeride)
 
 # the global elevation parameters
 assign downhillcost             = max 0 sub 30 multiply mtb_hard_factor 10
@@ -35,7 +35,7 @@ assign uphillcutoff             = 1.5
 # elevation filtering parameters (tbd: optimized settings)
 assign elevationpenaltybuffer   = 10
 assign elevationmaxbuffer       = 10
-assign elevationreduce          = 0
+assign elevationbufferreduce    = 0
 
 # ++++++++++++++++++++++++++++++++++++++ some global defines for finetuning
 
@@ -50,9 +50,9 @@ assign steps_ramp_dh_penalty    = 2                # penalty for downhill steps 
 assign ferry_penalty            = 5000             # penalty for ferries
 assign private_penalty          = 6                # penalty for private ways and nodes
 assign bicycle_no_penalty       = 5                # penalty for ways and nodes with bicycle=no
-assign slippery_muddy_penalty   = switch is_wet    # penalty for unpaved roads and tracks, which are tricky to ride when wet
-                                2
-                                0
+assign slippery_muddy_penalty   = if is_wet        # penalty for unpaved roads and tracks, which are tricky to ride when wet
+                                    then 2
+                                    else 0
 assign ford_penalty             = max 0 sub 15 multiply mtb_hard_factor 8
                                                    # penalty for fords (you might not want to get your feet wet ;-) )
 
@@ -104,41 +104,39 @@ assign has_cycleway             = or cycle or l_cycle r_cycle
 #
 # is it a low-speed highway?
 #
-assign islowspeed               = switch maxspeed=10|20|30 
-                                true
-                                false
+assign islowspeed               = if maxspeed=10|20|30 
+                                  then true
+                                  else false
 
 #
 # is it a high-speed highway?
 #
-assign ishighspeed              = switch maxspeed=60|70|80|90|100|110|120|130|rural
-                                true
-                                false
+assign ishighspeed              = if maxspeed=60|70|80|90|100|110|120|130|rural
+                                  then true
+                                  else false
 
 #
 # are there multiple lanes on the highway?
 #
-assign ismultilane =
-  switch lanes=
-    false
-    switch lanes=1|1.5|2
-      false
-      true
+assign ismultilane              = if lanes=
+                                    then false
+                                    else if lanes=1|1.5|2
+                                      then false
+                                      else true
 
 #
 # assign the penalty reduction for roads with sidewalks or cycleways
 #
-assign penalty_reduce           = switch has_cycleway 
-                                    isbike_reduce 
-                                    switch has_foot 
-                                      isfoot_reduce 
-                                      1 
+assign penalty_reduce           = if has_cycleway 
+                                    then isbike_reduce 
+                                    else if has_foot 
+                                      then isfoot_reduce 
+                                      else 1 
 
 #
 # is the road paved or unpaved?
 #
 assign ispaved                  = surface=paved|asphalt|concrete|paving_stones|grass_paver|metal|wood|compacted
-
 assign isunpaved                = not or surface= ispaved
 
 #
@@ -153,125 +151,128 @@ assign any_cycleroute           = or route_bicycle_icn=yes or route_bicycle_ncn=
 #
 # get the inclination (up=1, down=-1, unknown=0)
 #
-assign inclination =
-switch incline=         0
-  switch incline=yes|up|5%|8%|10%|15%|20%|25%|30%
-    switch reversedirection=yes
-      -1
-      1
-  switch incline=down|-5%|-8%|-10%|-15%|-20%|-25%|-30%
-    switch reversedirection=yes
-      1
-      -1
-  0
+assign inclination = 
+if incline=
+  then 0
+  else if incline=yes|up|5%|8%|10%|15%|20%|25%|30%
+    then if reversedirection=yes
+      then -1
+      else 1
+  else if incline=down|-5%|-8%|-10%|-15%|-20%|-25%|-30%
+    then if reversedirection=yes
+      then 1
+      else -1
+    else 0
 
 
 #
 # precalculate steps penaltys
 #
 assign steps_uh_penalty =
-  switch or ramp:stroller=yes ramp:bicycle=yes 
-    steps_ramp_uh_penalty
-    multiply 1.2 add uh_penalty steps_penalty                 # boost steps uphill penalty even more
+  if or ramp:stroller=yes ramp:bicycle=yes 
+    then steps_ramp_uh_penalty
+    else multiply 1.2 add uh_penalty steps_penalty             # boost steps uphill penalty even more
 
 assign steps_dh_penalty =
-  switch or ramp:stroller=yes ramp:bicycle=yes 
-    steps_ramp_dh_penalty
-    add dh_penalty steps_penalty
+  if or ramp:stroller=yes ramp:bicycle=yes 
+    then steps_ramp_dh_penalty
+    else add dh_penalty steps_penalty
 
 
 #
 # base penalties for roadtypes
 #
 assign hw_penalty =
-  switch highway=motorway|motorway_link                     9999
-  switch highway=proposed                                   9999
-  switch highway=construction                               construction_penalty
-  0
+  if      highway=motorway|motorway_link               then 9999
+  else if highway=proposed                             then 9999
+  else if highway=construction                         then construction_penalty
+                                                       else 0
 
 assign hw_major_penalty =
-  multiply  switch islowspeed 0.75 1                           # reduce the penalty if the speedlimit is low
+  multiply  if islowspeed                                      # reduce the penalty if the speedlimit is low
+              then 0.75
+              else 1
   multiply  max 1 multiply ishighspeed 1.2                     # rise the penalty if the speedlimit is high
   multiply  max 1 multiply ismultilane 1.2                     # rise the penalty if there are more than 2 lanes  
-  switch    highway=trunk|trunk_link                         add mj_rd_penalty 10
-  switch    highway=primary|primary_link                     add mj_rd_penalty 6.0
-  switch    highway=secondary|secondary_link                 add mj_rd_penalty 2.6
-  switch    highway=tertiary|tertiary_link                   add mj_rd_penalty 2.3
-  switch    highway=unclassified                             add mj_rd_penalty 2.2
-  0
+  if        highway=trunk|trunk_link                   then add mj_rd_penalty 10
+  else if   highway=primary|primary_link               then add mj_rd_penalty 6.0
+  else if   highway=secondary|secondary_link           then add mj_rd_penalty 2.6
+  else if   highway=tertiary|tertiary_link             then add mj_rd_penalty 2.3
+  else if   highway=unclassified                       then add mj_rd_penalty 2.2
+                                                       else 0
 
 assign hw_minor_penalty =
   multiply  max 1 multiply ishighspeed 1.2                     # rise the penalty if the speedlimit is high
   multiply  max 1 multiply ismultilane 1.2                     # rise the penalty if there are more than 2 lanes
-  switch    highway=residential                              1.2
-  switch    highway=service                                  1.1
-  switch    highway=living_street                            1.1
-  switch    highway=pedestrian                               1.1
-  switch    highway=footway                                  1.1
-  0
+  if        highway=residential                         then 1.2
+  else if   highway=service                             then 1.1
+  else if   highway=living_street                       then 1.1
+  else if   highway=pedestrian                          then 1.1
+  else if   highway=footway                             then 1.1
+                                                        else 0
 
 #
 # additional penalties for other road attributes
 #
 assign mtb_sac_penalty =
   max 0 multiply sub 1 multiply mtb_hard_factor 0.25
-  switch or mtb:scale=3|2+ sac_scale=demanding_mountain_hiking 2
-  switch or mtb:scale=4 sac_scale=alpine_hiking             4
-  switch or mtb:scale=5 sac_scale=demanding_alpine_hiking   50
-  switch or mtb:scale=6 sac_scale=difficult_alpine_hiking   100
-  0
+  if  or mtb:scale=3|2+ sac_scale=demanding_mountain_hiking then 2
+  else if or mtb:scale=4 sac_scale=alpine_hiking            then 4
+  else if or mtb:scale=5 sac_scale=demanding_alpine_hiking  then 50
+  else if or mtb:scale=6 sac_scale=difficult_alpine_hiking  then 100
+                                                            else 0
 
 assign mtb_uh_penalty =                                         #(supported since 1.4.4)
   max 0 multiply sub 1 multiply mtb_hard_factor 0.25
-  switch mtb:scale:uphill=3 2
-  switch mtb:scale:uphill=4 4
-  switch mtb:scale:uphill=5 50
-  switch mtb:scale=6        100
-  0
+  if      mtb:scale:uphill=3                             then 2
+  else if mtb:scale:uphill=4                             then 4
+  else if mtb:scale:uphill=5                             then 50
+  else if mtb:scale=6                                    then 100
+                                                         else 0
 
 assign tracktype_penalty =
   max 0 multiply sub 1 multiply mtb_hard_factor 0.5
-  switch tracktype=grade5                                   0.2
-  0
+  if tracktype=grade5                                    then 0.2
+                                                         else 0
 
 assign traffic_penalty =
   multiply 0.3
-    switch estimated_traffic_class=1    0
-    switch estimated_traffic_class=2    1
-    switch estimated_traffic_class=3    2
-    switch estimated_traffic_class=4    3
-    switch estimated_traffic_class=5    4
-    switch estimated_traffic_class=6    5
-    switch estimated_traffic_class=7    6
-    0
+    if      estimated_traffic_class=1                    then 0
+    else if estimated_traffic_class=2                    then 1
+    else if estimated_traffic_class=3                    then 2
+    else if estimated_traffic_class=4                    then 3
+    else if estimated_traffic_class=5                    then 4
+    else if estimated_traffic_class=6                    then 5
+    else if estimated_traffic_class=7                    then 6
+                                                         else 0
 
 #
 # implicit access here just from the motorroad tag
 # (implicit access rules from highway tag handled elsewhere)
 #
 assign defaultaccess =
-  switch access=
-    not motorroad=yes
-    switch access=no
-      false
-      switch access=private
-        false
-        true
+  if access=
+    then not motorroad=yes
+    else if access=no
+      then false
+      else if access=private
+        then false
+        else true
 
 #
 # calculate logical bike access
 #
 assign bikeaccess =
   or any_cycleroute
-    switch bicycle=
-      switch vehicle=
-        defaultaccess
-        switch vehicle=private|no
-          false
-          true
-    switch not bicycle=private
-      true
-      false
+    if bicycle=
+      then if vehicle=
+        then defaultaccess
+        else if vehicle=private|no
+          then false
+          else true
+      else if not bicycle=private
+        then true
+        else false
 
 #
 # calculate logical foot access
@@ -279,26 +280,26 @@ assign bikeaccess =
 assign footaccess =
   or bikeaccess
   or bicycle=dismount
-    switch foot=
-      defaultaccess
-      not foot=private|no
+    if foot=
+      then defaultaccess
+      else not foot=private|no
 
 #
 # combine to penalty for access
 #
 assign access_penalty = 
-switch bikeaccess 
-  switch bicycle=no                                           # bike access granted from above, but check for bicycle=no
-    bicycle_no_penalty                                        # access with penalty for bicycle=no  
-    switch bicycle=dismount                                   # bike access granted from above, but check for bicycle=dismount
-    multiply 0.2 bicycle_no_penalty                           # access with penalty for bicycle=dismount
-    0                                                         # full bike access
-  switch or access=private
-         or bicycle=private
-         or vehicle=private
+if bikeaccess 
+  then if bicycle=no                                          # bike access granted from above, but check for bicycle=no
+    then bicycle_no_penalty                                   # access with penalty for bicycle=no  
+    else if bicycle=dismount                                  # bike access granted from above, but check for bicycle=dismount
+    then multiply 0.2 bicycle_no_penalty                      # access with penalty for bicycle=dismount
+    else 0                                                    # full bike access
+  else if or access=private
+          or bicycle=private
+          or vehicle=private
             foot=private
-    private_penalty                                           # access with penalty for private
-    100000                                                    # absolutely no access
+        then                                                  private_penalty # access with penalty for private
+        else                                                  100000          # absolutely no access
 
 #
 # combine additional penaltys which are common for flat, up and down ways
@@ -306,58 +307,59 @@ switch bikeaccess
 assign misc_penalty =
   add access_penalty
   add traffic_penalty
-  add switch not ford=                    ford_penalty
-      0
-  add switch trail_visibility=bad         2
-      switch trail_visibility=horrible    5
-      switch trail_visibility=no          15
-      0
-  add switch smoothness=impassable        10
-      0
+  add if not ford=                                       then ford_penalty
+                                                         else 0
+  add if trail_visibility=bad                            then 2
+        else if trail_visibility=horrible                then 5
+        else if trail_visibility=no                      then 15
+                                                         else 0
+  add if smoothness=impassable                           then 10
+                                                         else 0
   max 0 multiply sub 1 multiply mtb_hard_factor 0.3333
-  add switch surfacebadwhenwet            slippery_muddy_penalty
-      0
-  add switch highwaybadwhenwet            slippery_muddy_penalty
-      0
-  switch surface=sand|mud                 3
-      0
+  add if surfacebadwhenwet                               then slippery_muddy_penalty
+                                                         else 0
+  add if highwaybadwhenwet                               then slippery_muddy_penalty
+                                                         else 0
+  if surface=sand|mud                                    then 3
+                                                         else 0
 
 
 #
 # now assign the parameters for the routing engine (initialcost, turncost and flat/up/down costfactors)
 #
-assign turncost =
-  switch highway=path|footway
-    switch equal inclination -1 0 10
-    switch highway=track 50 150
+assign turncost = if highway=path|footway
+    then if equal inclination -1                         then 0
+                                                         else 10
+    else if highway=track                                then 50
+                                                         else 150
 
 #
 # assign parameters for turn instruction generation
 #
 assign priorityclassifier =
-  switch equal voiceprio 1 1
-  switch equal voiceprio 2
-       if ( highway=motorway                  ) then  101
-  else if ( highway=motorway_link             ) then  100
-  else if ( highway=trunk                     ) then  91
-  else if ( highway=trunk_link                ) then  90
-  else if ( highway=primary                   ) then  88
-  else if ( highway=primary_link              ) then  87
-  else if ( highway=secondary                 ) then  86
-  else if ( highway=secondary_link            ) then  85
-  else if ( highway=tertiary                  ) then  84
-  else if ( highway=tertiary_link             ) then  83
-  else if ( highway=unclassified              ) then  82
-  else if ( highway=residential|living_street ) then  50
-  else if ( highway=service                   ) then  40
-  else if ( highway=road                      ) then  35  
-  else if ( highway=cycleway                  ) then  30
-  else if ( highway=bridleway|track           ) then  20
-  else if ( highway=footway|pedestrian        ) then  17
-  else if ( highway=steps                     ) then  15
-  else if ( highway=path                      ) then  10
-    else 0
-  0
+  if      equal voiceprio 1                             then 1
+  else if equal voiceprio 2
+  then if ( highway=motorway                  )         then  101
+  else if ( highway=motorway_link             )         then  100
+  else if ( highway=trunk                     )         then  91
+  else if ( highway=trunk_link                )         then  90
+  else if ( highway=primary                   )         then  88
+  else if ( highway=primary_link              )         then  87
+  else if ( highway=secondary                 )         then  86
+  else if ( highway=secondary_link            )         then  85
+  else if ( highway=tertiary                  )         then  84
+  else if ( highway=tertiary_link             )         then  83
+  else if ( highway=unclassified              )         then  82
+  else if ( highway=residential|living_street )         then  50
+  else if ( highway=service                   )         then  40
+  else if ( highway=road                      )         then  35  
+  else if ( highway=cycleway                  )         then  30
+  else if ( highway=bridleway|track           )         then  20
+  else if ( highway=footway|pedestrian        )         then  17
+  else if ( highway=steps                     )         then  15
+  else if ( highway=path                      )         then  10
+  else                                                        0
+  else                                                        0
 
 assign isroundabout             = junction=roundabout
 assign islinktype               = highway=motorway_link|trunk_link|primary_link|secondary_link|tertiary_link
@@ -376,138 +378,137 @@ assign turnInstructionRoundabouts = 1
 assign turnInstructionCatchingRange = 4
 
 
-assign initialcost =
-  switch    route=ferry
-    ferry_penalty
-    0
+assign initialcost = if route=ferry                     then ferry_penalty
+                                                        else 0
 
 #
 # costfactor for flat terrain
 #
 assign costfactor =
-  switch and highway= not route=ferry 100000
+  if and highway= not route=ferry                       then 100000
+    else
     min 9999
     add misc_penalty
-    add switch and equal inclination 1  mtb_uh_penalty
-          add switch consideruphill uh_difficult_penalty 0 mtb_uh_penalty
-          mtb_sac_penalty
+    add if and equal inclination 1 mtb_uh_penalty
+        then add if consideruphill                      then uh_difficult_penalty 
+                                                        else 0
+                                                        mtb_uh_penalty
+                                                        else mtb_sac_penalty
     add tracktype_penalty
     max 1
-    switch hw_penalty hw_penalty
-    switch hw_major_penalty hw_major_penalty
-    switch hw_minor_penalty hw_minor_penalty
+    if hw_penalty                                       then hw_penalty
+    else if hw_major_penalty                            then hw_major_penalty
+    else if hw_minor_penalty                            then hw_minor_penalty
 
-    switch    highway=path                              1
-    switch    highway=steps                             
-      switch    equal inclination 1   steps_uh_penalty
-        switch    equal inclination -1   steps_dh_penalty
-          switch reversedirection=yes 
-            steps_dh_penalty
-            steps_uh_penalty
-    switch    highway=track|bridleway                   1
-    switch    highway=cycleway                          max 1 add 1.1 multiply mtb_hard_factor 0.1
-
-    40 # default for any other highway type not handled above
+    else if highway=path                                then 1
+    else if highway=steps                             
+      then if equal inclination 1                       then steps_uh_penalty
+        else if equal inclination -1                    then steps_dh_penalty
+          else if reversedirection=yes                  then steps_dh_penalty
+                                                        else steps_uh_penalty
+    else if highway=track|bridleway                     then 1
+    else if highway=cycleway                            then max 1 add 1.1 multiply mtb_hard_factor 0.1
+                                                        else 40 # default for any other highway type not handled above
 
 #
 # costfactor for uphills
 #
 assign uphillcostfactor =
-  switch consideruphill
-    switch and highway= not route=ferry 100000
+  if consideruphill
+    then if and highway= not route=ferry                then 100000
+      else
       min 9999
       add misc_penalty
-      add switch and equal inclination 1 mtb_uh_penalty
-          add uh_difficult_penalty mtb_uh_penalty
-          switch mtb_sac_penalty add uh_difficult_penalty mtb_sac_penalty 0 
-      add switch tracktype_penalty add uh_difficult_penalty tracktype_penalty 0
+      add if and equal inclination 1 mtb_uh_penalty
+                                                        then add uh_difficult_penalty mtb_uh_penalty
+          else if mtb_sac_penalty                       then add uh_difficult_penalty mtb_sac_penalty 
+                                                        else 0 
+      add if tracktype_penalty                          then add uh_difficult_penalty tracktype_penalty 
+                                                        else 0
       max 1
-      switch hw_penalty hw_penalty
-      switch hw_major_penalty multiply penalty_reduce hw_major_penalty
-      switch hw_minor_penalty hw_minor_penalty 
+      if hw_penalty                                     then hw_penalty
+      else if hw_major_penalty                          then multiply penalty_reduce hw_major_penalty
+      else if hw_minor_penalty                          then hw_minor_penalty 
 
-      switch    highway=path                              uh_penalty
-      switch    highway=steps                             # first try to use incline
-        switch    equal inclination 1   steps_uh_penalty
-        switch    equal inclination -1   steps_dh_penalty
-                  steps_uh_penalty                        # no incline tag, assume step is really uphill
-      switch    highway=track                             1
-      switch    highway=bridleway                         1.2
-      switch    highway=cycleway                          1
-
-      40 # default for any other highway type not handled above
-  0 # no special handling for uphill selected, flat costfactor will be used instead
+      else if highway=path                              then uh_penalty
+      else if highway=steps                             # first try to use incline
+        then if equal inclination 1                     then steps_uh_penalty
+        else if equal inclination -1                    then steps_dh_penalty
+                                                        else steps_uh_penalty # no incline tag, assume step is really uphill
+      else if highway=track                             then 1
+      else if highway=bridleway                         then 1.2
+      else if highway=cycleway                          then 1
+                                                        else 40 # default for any other highway type not handled above
+                                                        else 0 # no special handling for uphill selected, flat costfactor will be used instead
 
 #
 # costfactor for downhills
 #
 assign downhillcostfactor = 
-  switch considerdownhill
-    switch and highway= not route=ferry 100000
+  if considerdownhill
+    then if and highway= not route=ferry                then 100000
+      else
       min 9999
       add misc_penalty
-      add switch and equal inclination 1 mtb_uh_penalty
-          add switch consideruphill uh_difficult_penalty 0 mtb_uh_penalty
-          switch mtb_sac_penalty add dh_difficult_penalty mtb_sac_penalty 0
-      add switch tracktype_penalty add dh_difficult_penalty tracktype_penalty 0
+      add if and equal inclination 1 mtb_uh_penalty
+          then add if consideruphill                    then uh_difficult_penalty
+                                                        else 0 
+                                                             mtb_uh_penalty
+          else if mtb_sac_penalty                       then add dh_difficult_penalty mtb_sac_penalty 
+                                                        else 0
+      add if tracktype_penalty                          then add dh_difficult_penalty tracktype_penalty
+                                                        else 0
       max 1
-      switch hw_penalty add dh_penalty hw_penalty
-      switch hw_major_penalty add dh_penalty hw_major_penalty
-      switch hw_minor_penalty add dh_penalty hw_minor_penalty
+      if      hw_penalty                                then add dh_penalty hw_penalty
+      else if hw_major_penalty                          then add dh_penalty hw_major_penalty
+      else if hw_minor_penalty                          then add dh_penalty hw_minor_penalty
 
-      switch    highway=path                              1
-      switch    highway=steps                             # first try to use incline
-        switch    equal inclination 1   steps_uh_penalty
-        switch    equal inclination -1   steps_dh_penalty
-                  steps_dh_penalty                        # no incline tag, assume step is really downhill
-      switch    highway=track|bridleway
-        switch  dh_use_tracks                             dh_track_penalty dh_penalty
-      switch    highway=cycleway                          add dh_penalty 0.5
-
-      40 # default for any other highway type not handled above
-  0 # no special handling for downhill selected, flat costfactor will be used instead
+      else if highway=path                              then 1
+      else if highway=steps                             # first try to use incline
+        then if equal inclination 1                     then steps_uh_penalty
+        else if equal inclination -1                    then steps_dh_penalty
+                                                        else steps_dh_penalty # no incline tag, assume step is really downhill
+      else if highway=track|bridleway
+        then if dh_use_tracks                           then dh_track_penalty 
+                                                        else dh_penalty
+      else if highway=cycleway                          then add dh_penalty 0.5
+                                                        else 40 # default for any other highway type not handled above
+                                                        else 0 # no special handling for downhill selected, flat costfactor will be used instead
 
 ---context:node  # following code refers to node tags
 
 assign defaultaccess =
-  switch access=
-    switch barrier=gate|fence|door|wall
-      false 
-      true 
-    switch access=private|no
-      false
-      true
+  if access=
+    then if barrier=gate|fence|door|wall                then false 
+                                                        else true 
+    else if access=private|no
+                                                        then false
+                                                        else true
 
 assign bikeaccess =
   or nodeaccessgranted=yes
-  switch bicycle=
-    switch vehicle=
-      defaultaccess
-      switch or vehicle=private 
-                vehicle=no
-        false
-        true
-    switch bicycle=private|no|dismount
-      false
-      true
+  if bicycle=
+    then if vehicle=                                    then defaultaccess
+      else if vehicle=private|no                        then false
+                                                        else true
+    else if bicycle=private|no|dismount                 then false
+                                                        else true
 
 assign footaccess =
   or bicycle=dismount
-  switch foot=
-    defaultaccess
-    switch foot=private|no
-      false
-      true
+  if foot=                                              then defaultaccess
+    else if foot=private|no                             then false
+                                                        else true
 
 assign initialcost =
-  add  switch highway=traffic_signals 100 0
-  switch and or bikeaccess footaccess not highway=elevator
-    switch or not ford= highway=ford
-      multiply 100 ford_penalty
-      0
+  add  if highway=traffic_signals                       then 100  
+                                                        else 0
+  if and or bikeaccess footaccess not highway=elevator
+    then if or not ford= highway=ford                   then multiply 100 ford_penalty
+                                                        else 0
 #    switch  or access=private
 #            or bicycle=private
 #            or vehicle=private
 #            foot=private
 #      multiply 100 private_penalty   # access with penalty
-      1000000
+                                                        else 1000000
