@@ -21,3 +21,5 @@ This is not a problem with other apps or brouter-web, as they are not aware of t
 ## Changelog ##
 ### v1.0.0 ###
 * initial version
+### v1.0.1 ###
+* refactor to syntax alternatives (should improve the readability)
