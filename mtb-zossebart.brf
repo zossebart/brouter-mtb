@@ -1,6 +1,6 @@
 #
 # mountainbike profile by zossebart
-# v1.0.1
+# v1.0.2
 # see https://github.com/zossebart/brouter-mtb for information and releases
 #
 # CAUTION! always ride carefully, routing data and/or route calculation might not be accurate and safe at all times!
@@ -16,8 +16,8 @@ assign validForCars             = false
 assign validForFoot             = false
 
 # Locus nav interface flags
-assign is_wet                   = false           # %is_wet%
-assign avoid_unpaved            = true            # %avoid_unpaved%
+assign is_wet                   = 0               # %is_wet%
+assign avoid_unpaved            = 1               # %avoid_unpaved%
                                                   # CAUTION!!! For the default routing mode, enable avoid unpaved flag in Locus,
                                                   # otherwise more difficult routes are calculated!!!
 
