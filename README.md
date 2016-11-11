@@ -1,5 +1,5 @@
 # brouter-mtb
-a Brouter Mountainbike Profile
+## a Brouter Mountainbike Profile ##
 
 This profile tries to find routes suitable for mountainbikes. It tries to avoid major roads and focuses on tracks for uphills and paths/tracks for downhills where possible.
 
@@ -21,5 +21,6 @@ This is not a problem with other apps or brouter-web, as they are not aware of t
 ## Changelog ##
 ### v1.0.0 ###
 * initial version
+
 ### v1.0.1 ###
 * refactor to syntax alternatives (should improve the readability)
