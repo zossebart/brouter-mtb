@@ -22,8 +22,10 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 ## Changelog ##
 ### v1.0.0 ###
 * initial version
+
 ### v1.0.1 ###
 * refactor to syntax alternatives (should improve the readability)
+
 ### v1.0.2 ###
 * correction to make Locus parameter switches work again
 ### v1.1.0 ###
