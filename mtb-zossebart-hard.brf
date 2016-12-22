@@ -18,7 +18,7 @@ assign validForFoot             = false
 # Locus nav interface flags
 assign is_wet                   = 0               # %is_wet%
 
-assign mtb_hard_factor          = 0               # default mtb routing (xc/am)
+assign mtb_hard_factor          = 2               # more difficult/demanding routes (enduro/freeride)
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
