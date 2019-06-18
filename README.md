@@ -31,3 +31,6 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 
 ### v1.1.0 ###
 * split into normal/hard versions of the profile, removed avoid_unpaved parameter
+
+### v1.1.1 ###
+* fix for wrong turninstructions bug
