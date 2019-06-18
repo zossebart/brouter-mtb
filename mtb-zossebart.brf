@@ -8,7 +8,9 @@
 
 ---context:global   # following code refers to global config
 
-assign turnInstructionMode      = 1               # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
+assign turnInstructionMode          = 1           # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
+assign turnInstructionRoundabouts   = 1
+assign turnInstructionCatchingRange = 4
 
 # generate a bike route
 assign validForBikes            = true
@@ -428,10 +430,6 @@ assign isgoodforcars            =
 assign classifiermask           = add multiply isroundabout   4
                                   add multiply islinktype     8
                                   multiply isgoodforcars 16
-
-assign turnInstructionRoundabouts = 1
-assign turnInstructionCatchingRange = 4
-
 
 assign initialcost = if route=ferry                     then ferry_penalty
                                                         else 0
