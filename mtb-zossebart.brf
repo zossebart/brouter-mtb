@@ -18,7 +18,7 @@ assign validForCars             = false
 assign validForFoot             = false
 
 # Locus nav interface flags
-assign is_wet                   = 0               # %is_wet%
+assign is_wet                   = 0               # %is_wet% | Wet_conditions | boolean
 
 assign mtb_hard_factor          = 0               # default mtb routing (xc/am)
 
