@@ -78,6 +78,10 @@ assign uh_difficult_penalty     = max 0 ( sub 10 ( multiply mtb_hard_factor 1 ) 
 
 ---context:way   # following code refers to way-tags
 
+# classifier constants
+assign classifier_none  = 1
+assign classifier_ferry = 2
+
 #
 # pre-calculate some logical expressions
 #
@@ -431,8 +435,16 @@ assign classifiermask           = add multiply isroundabout   4
                                   add multiply islinktype     8
                                   multiply isgoodforcars 16
 
-assign initialcost = if route=ferry                     then ferry_penalty
-                                                        else 0
+#
+# for any change in initialclassifier, initialcost is added once
+#
+assign initialclassifier =
+     if route=ferry then classifier_ferry
+else classifier_none
+
+assign initialcost =
+     if ( equal initialclassifier classifier_ferry ) then ferry_penalty
+else 0
 
 #
 # costfactor for flat terrain
