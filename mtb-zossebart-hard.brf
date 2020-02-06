@@ -8,8 +8,8 @@
 
 ---context:global   # following code refers to global config
 
-assign turnInstructionMode          = 1           # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
-assign turnInstructionRoundabouts   = 1
+assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style]
+assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
 assign turnInstructionCatchingRange = 4
 
 # generate a bike route
@@ -18,9 +18,9 @@ assign validForCars             = false
 assign validForFoot             = false
 
 # Locus nav interface flags
-assign is_wet                   = 0               # %is_wet% | Wet_conditions | boolean
+assign is_wet                   = 0               # %is_wet% | Choose a safer route in wet conditions | boolean
 
-assign mtb_hard_factor          = 2               # more difficult/demanding routes (enduro/freeride)
+assign mtb_hard_factor          = 2               # %mtb_hard_factor% | Difficulty of the route (0:xc/am...2:allmountain...4:enduro) | number
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
