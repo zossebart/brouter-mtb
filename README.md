@@ -34,3 +34,6 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 
 ### v1.1.1 ###
 * fix for wrong turninstructions bug
+
+### v1.1.2 ###
+* add profile parameter comments, fix ferry route avoidance
