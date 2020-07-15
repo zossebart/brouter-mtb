@@ -1,6 +1,6 @@
 #
 # mountainbike-hard profile by zossebart (version for more difficult/demanding routes)
-# v1.1.2
+# v1.1.3
 # see https://github.com/zossebart/brouter-mtb for information and releases
 #
 # CAUTION! always ride carefully, routing data and/or route calculation might not be accurate and safe at all times!
@@ -8,7 +8,7 @@
 
 ---context:global   # following code refers to global config
 
-assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style]
+assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style]
 assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
 assign turnInstructionCatchingRange = 4
 
