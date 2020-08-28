@@ -218,12 +218,16 @@ assign mtb_sac_penalty =
   max 0 
   multiply 
   ( sub 1 ( multiply mtb_hard_factor 0.25 ) )
-  ( 
-    if ( or mtb:scale=3|2+ sac_scale=demanding_mountain_hiking ) then 2
-    else if ( or mtb:scale=4 sac_scale=alpine_hiking )           then 4
-    else if ( or mtb:scale=5 sac_scale=demanding_alpine_hiking ) then 50
-    else if ( or mtb:scale=6 sac_scale=difficult_alpine_hiking ) then 100
-                                                                 else 0
+  (
+    if mtb:scale=0|0+ then 0
+    else if mtb:scale=1-|1                                            then 0.5
+    else if ( or mtb:scale=1+ sac_scale=hiking )                      then 1
+    else if ( or mtb:scale=2|2+ sac_scale=mountain_hiking )           then 2
+    else if ( or mtb:scale=3 sac_scale=demanding_mountain_hiking )    then 8
+    else if ( or mtb:scale=4 sac_scale=alpine_hiking )                then 32
+    else if ( or mtb:scale=5 sac_scale=demanding_alpine_hiking )      then 128
+    else if ( or mtb:scale=6 sac_scale=difficult_alpine_hiking )      then 512
+                                                                      else 0
   )
 
 assign mtb_uh_penalty =                                         #(supported since 1.4.4)
@@ -234,7 +238,6 @@ assign mtb_uh_penalty =                                         #(supported sinc
     if      mtb:scale:uphill=3                             then 2
     else if mtb:scale:uphill=4                             then 4
     else if mtb:scale:uphill=5                             then 50
-    else if mtb:scale=6                                    then 100
                                                            else 0
   )
 
