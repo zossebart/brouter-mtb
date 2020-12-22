@@ -21,6 +21,7 @@ assign validForFoot             = false
 assign is_wet                   = false           # %is_wet% | Choose a safer route in wet conditions | boolean
 
 assign mtb_hard_factor          = 2               # %mtb_hard_factor% | Difficulty of the route (0:xc/am...2:allmountain...4:enduro) | number
+assign uh_push_or_carry         = 1               # %uh_push_or_carry% | Pushing or carrying the bike on uphill paths is allowed (0:no...1:pushing...2:hike-a-bike)| number
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
@@ -69,9 +70,16 @@ assign dh_track_penalty         = multiply 0.75 dh_penalty
 
 # +++ special uphill parameters
 assign consideruphill           = true             # use special penalties for uphills? (enables/disables below parameters)
-assign uh_penalty               = max 0 ( sub 2.5 ( multiply mtb_hard_factor 0.25 ) )
+
+assign uh_push_factor           = max 0 add multiply multiply uh_push_or_carry uh_push_or_carry 4.16666
+                                        add multiply uh_push_or_carry -19.16666
+                                        20
+
+assign uh_penalty               = max 0 multiply ( sub 2.5 multiply mtb_hard_factor 0.25 )
+                                                 ( uh_push_factor )
                                                    # additional penalty for undesired uphills (e.g. paths)
-assign uh_difficult_penalty     = max 0 ( sub 10 ( multiply mtb_hard_factor 1 ) )
+assign uh_difficult_penalty     = max 0 multiply ( sub 10 multiply mtb_hard_factor 1  )
+                                        multiply 0.3 uh_push_factor
                                                    # additional uphill penalty for ways with high difficulty (mtb/sac_scale or mtb_scale_uphill)
 
 # ------------------------------------------- global defines end
