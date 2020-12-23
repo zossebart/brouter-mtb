@@ -511,13 +511,10 @@ assign uphillcostfactor =
       else
       min 9999
       add misc_penalty
-      add if ( and ( equal inclination 1 ) mtb_uh_penalty )
+      add if mtb_uh_penalty
                                                         then add uh_difficult_penalty mtb_uh_penalty
-          else 
-          (
-            if mtb_sac_penalty                          then add uh_difficult_penalty mtb_sac_penalty 
+          else if mtb_sac_penalty                       then add uh_difficult_penalty mtb_sac_penalty 
                                                         else 0 
-          )                                                        
       add if tracktype_penalty                          then add uh_difficult_penalty tracktype_penalty 
                                                         else 0
       max 1
