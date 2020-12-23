@@ -75,7 +75,7 @@ assign uh_push_factor           = max 0 add multiply multiply uh_push_or_carry u
                                         add multiply uh_push_or_carry -10.33333
                                         10
 
-assign uh_penalty               = max 0 multiply ( sub 2.5 multiply mtb_hard_factor 0.25 )
+assign uh_penalty               = max 0 multiply ( sub 2.5 multiply mtb_hard_factor 0.3 )
                                                  ( uh_push_factor )
                                                    # additional penalty for undesired uphills (e.g. paths)
 assign uh_difficult_penalty     = max 0 multiply ( sub 10 multiply mtb_hard_factor 1  )
