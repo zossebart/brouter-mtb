@@ -18,7 +18,7 @@ assign validForCars             = false
 assign validForFoot             = false
 
 # Locus nav interface flags
-assign is_wet                   = 0               # %is_wet% | Choose a safer route in wet conditions | boolean
+assign is_wet                   = false           # %is_wet% | Choose a safer route in wet conditions | boolean
 
 assign mtb_hard_factor          = 0               # %mtb_hard_factor% | Difficulty of the route (0:xc/am...2:allmountain...4:enduro) | number
 
