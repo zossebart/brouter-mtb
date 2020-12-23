@@ -71,7 +71,7 @@ assign isfoot_reduce            = 0.9              # penalty reduction for major
 assign considerdownhill         = true             # use special penalties for downhills? (enables/disables below parameters)
 assign dh_penalty               = max 0 ( add 2.0 ( multiply mtb_hard_factor 0.5 ) )
                                                    # additional penalty for undesired downhills (e.g. major roads)
-assign dh_difficult_penalty     = max 0 ( sub 10 ( multiply mtb_hard_factor 1 ) )                
+assign dh_difficult_penalty     = max 0 ( sub 7 ( multiply mtb_hard_factor 2.7 ) )
                                                    # additional downhill penalty for ways with high difficulty (mtb/sac_scale)
 assign dh_use_tracks            = lesser mtb_hard_factor 1
                                                    # use less penalty for downhill tracks than for other waytypes? (0/1)
