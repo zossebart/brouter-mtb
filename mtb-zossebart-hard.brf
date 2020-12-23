@@ -71,9 +71,9 @@ assign dh_track_penalty         = multiply 0.75 dh_penalty
 # +++ special uphill parameters
 assign consideruphill           = true             # use special penalties for uphills? (enables/disables below parameters)
 
-assign uh_push_factor           = max 0 add multiply multiply uh_push_or_carry uh_push_or_carry 4.16666
-                                        add multiply uh_push_or_carry -19.16666
-                                        20
+assign uh_push_factor           = max 0 add multiply multiply uh_push_or_carry uh_push_or_carry 2.33333
+                                        add multiply uh_push_or_carry -10.33333
+                                        10
 
 assign uh_penalty               = max 0 multiply ( sub 2.5 multiply mtb_hard_factor 0.25 )
                                                  ( uh_push_factor )
