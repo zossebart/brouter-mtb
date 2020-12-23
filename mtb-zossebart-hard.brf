@@ -339,12 +339,31 @@ if bikeaccess
       else                                                    100000          # absolutely no access
   )
 
+assign badoneway =
+       if reversedirection=yes then
+         if oneway:bicycle=yes then true
+         else if oneway= then junction=roundabout
+         else oneway=yes|true|1
+       else oneway=-1
+
+assign onewaypenalty =
+       if ( badoneway ) then
+       (
+         if oneway:bicycle=no
+                                                        then 0
+         else if or highway=cycleway and highway=path bicycle=designated
+                                                        then 50
+                                                        else 0.0
+       )
+                                                        else 0.0
+
 #
 # combine additional penaltys which are common for flat, up and down ways
 #
 assign misc_penalty =
   add access_penalty
   add traffic_penalty
+  add onewaypenalty
   add if ( not ford= )                                   then ford_penalty
                                                          else 0
   add if trail_visibility=bad                            then 2
