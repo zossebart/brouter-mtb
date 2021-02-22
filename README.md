@@ -43,3 +43,7 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 
 ### v1.1.4 ###
 * add oruxmaps turninstructionmode parameter
+
+### v1.2.0 ###
+* avoid oneways on cycleways
+* kinematic model parameters for more precise ETA
