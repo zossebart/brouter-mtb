@@ -20,13 +20,13 @@ assign allow_ferries            = false           # %allow_ferries% | Allow ferr
 assign allow_steps              = true            # %allow_steps% | Allow steps | boolean
 assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
 assign use_sidewalks            = true            # %use_sidewalks% | Reduce penalty for major roads that have a sidewalk | boolean
-assign uh_push_or_carry         = 1               # %uh_push_or_carry% | Pushing or carrying the bike on uphill paths is allowed (0:no...1:pushing...2:hike-a-bike)| number
+assign uh_push_or_carry         = 0               # %uh_push_or_carry% | Pushing or carrying the bike on uphill paths is allowed (0:no...1:pushing...2:hike-a-bike)| number
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
 assign downhillcutoff           = 4
-assign uphillcost               = max 0 ( sub 40 ( multiply mtb_hard_factor 15 ) )
-assign uphillcutoff             = 1.5
+assign uphillcost               = max 0 ( sub 40 ( multiply mtb_hard_factor 10 ) )
+assign uphillcutoff             = 6
 
 # elevation filtering parameters (tbd: optimized settings)
 assign elevationpenaltybuffer   = 5
