@@ -1,6 +1,6 @@
 #
-# mountainbike-hard profile by zossebart (version for more difficult/demanding routes)
-# v1.2.0
+# mountainbike profile by zossebart
+# v1.2.1
 # see https://github.com/zossebart/brouter-mtb for information and releases
 #
 # CAUTION! always ride carefully, routing data and/or route calculation might not be accurate and safe at all times!
@@ -21,6 +21,7 @@ assign validForFoot             = false
 assign is_wet                   = false           # %is_wet% | Choose a safer route in wet conditions | boolean
 
 assign mtb_hard_factor          = 2               # %mtb_hard_factor% | Difficulty of the route (0:xc/am...2:allmountain...4:enduro) | number
+assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
@@ -602,7 +603,8 @@ assign defaultaccess =
   if access=
     then 
     (
-      if barrier=gate|fence|door|wall                   then false 
+      if and barrier=gate use_uncertain_gates           then true
+      else if barrier=gate|fence|door|wall              then false 
                                                         else true 
     )
     else
