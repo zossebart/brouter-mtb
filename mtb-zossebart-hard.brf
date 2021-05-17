@@ -256,10 +256,10 @@ assign mtb_uh_penalty =                                         #(supported sinc
   multiply 
   ( sub 1 ( multiply mtb_hard_factor 0.25 ) )
   ( 
-    if      mtb:scale:uphill=2                             then 2
-    else if mtb:scale:uphill=3                             then 5   
-    else if mtb:scale:uphill=4                             then 15
-    else if mtb:scale:uphill=5                             then 50
+    if      mtb:scale:uphill=2                             then 5
+    else if mtb:scale:uphill=3                             then 15   
+    else if mtb:scale:uphill=4                             then 30
+    else if mtb:scale:uphill=5                             then 60
     else if mtb:scale=6                                    then 100
                                                            else 0
   )
