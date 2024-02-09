@@ -19,7 +19,8 @@ assign validForFoot             = false
 
 # Locus nav interface flags
 assign is_wet                   = false           # %is_wet% | Choose a safer route in wet conditions | boolean
-assign allow_ferries            = false       # %allow_ferries% | Allow ferries | boolean
+assign allow_ferries            = false           # %allow_ferries% | Allow ferries | boolean
+assign allow_steps              = true            # %allow_steps% | Allow steps | boolean
 
 assign mtb_hard_factor          = 2               # %mtb_hard_factor% | Difficulty of the route (0:xc/am...2:allmountain...4:enduro) | number
 assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
@@ -180,14 +181,18 @@ if incline=
 # precalculate steps penaltys
 #
 assign steps_uh_penalty =
-  if or ramp:stroller=yes ramp:bicycle=yes 
+  if not allow_steps
+    then 99999
+  else if or ramp:stroller=yes ramp:bicycle=yes
     then steps_ramp_uh_penalty
-    else multiply 1.2 ( add uh_penalty steps_penalty )         # boost steps uphill penalty even more
+  else multiply 1.2 ( add uh_penalty steps_penalty )         # boost steps uphill penalty even more
 
 assign steps_dh_penalty =
-  if or ramp:stroller=yes ramp:bicycle=yes 
+  if not allow_steps
+    then 99999
+  else if or ramp:stroller=yes ramp:bicycle=yes
     then steps_ramp_dh_penalty
-    else add dh_penalty steps_penalty
+  else add dh_penalty steps_penalty
 
 
 #
