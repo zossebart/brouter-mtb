@@ -41,7 +41,7 @@ assign totalMass  = 100    # %totalMass% | Mass (in kg) of the bike + biker, for
 assign maxSpeed   = 35     # %maxSpeed% | Absolute maximum speed (in km/h), for travel time computation | number
 assign S_C_x      = 0.75   # %S_C_x% | Drag coefficient times the reference area (in m^2), for travel time computation | number
 assign C_r        = 0.02   # %C_r% | Rolling resistance coefficient (dimensionless), for travel time computation | number
-assign bikerPower = 100    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
+assign bikerPower = 180    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
 
 # ++++++++++++++++++++++++++++++++++++++ some global defines for finetuning
 
