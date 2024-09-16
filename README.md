@@ -3,16 +3,20 @@ a Brouter Mountainbike Profile
 
 This profile tries to find routes suitable for mountainbikes. It tries to avoid major roads and focuses on tracks for uphills and paths/tracks for downhills where possible.
 
-There are two major switches to modify the behaviour: 
+There are two major parameters to modify the behaviour: 
 
 * is_wet 
  * false: normal behaviour (default)
  * true: try to avoid ways which are potentially unpleasant to ride when they are wet (for example ways with grass/earth surface)
-* avoid_unpaved (available only prior to v1.1.0)
- * true: normal behaviour (default), generate routes for XC/AM
- * false: generate harder routes (for example Enduro)
+* mtb_hard_factor (range 0 - 4)
+ * 0: normal behaviour (default in mtb-zossebart.brf), generate routes for XC/AM
+ * 2: generate harder routes (for example All Mountain, default in mtb-zossebart-hard.brf)
+ * 4: highest setting (for example Enduro)
  
-These parameters are configurable from within the Locus UI when used with Locus version 3.19 and up. 
+Also, there are some additional switches for special features:
+* allow_ferries: switch on and off the usage of ferries (default off)
+* allow_steps: wether the route can go over steps (default on)
+* use_uncertain_gates: wether passing of gates with unknown access restrictions is allowed or not. The default behaviour is to do not pass such gates. However, in some poorly mapped areas, it might be beneficial to enable this switch to avoid lots of big detours in the routing. Be aware that you could end up at a closed or restricted gate then!
 
 **CAUTION:** Locus ignores the default settings of the parameters when the profile is first configured! This means the _avoid_unpaved_ parameter is set to _false_, which leads to the creation of harder routes in profile versions prior to v1.1.0!
 Please enable _avoid_unpaved_ at the first setup if you want the default behaviour! This setting is global for all profiles configured in Locus.
