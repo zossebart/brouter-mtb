@@ -54,3 +54,8 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 
 ### v1.2.1 ###
 * add parameter to switch access on uncertain gates (without access-tags)
+
+### v1.2.2 ###
+* add parameter to allow ferries (default off)
+* add parameter to allow steps (default on)
+* adapt default kinematic parameters for more realistic ETA
