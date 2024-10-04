@@ -32,7 +32,7 @@ assign uphillcost               = max 0 ( sub 40 ( multiply mtb_hard_factor 15 )
 assign uphillcutoff             = 1.5
 
 # elevation filtering parameters (tbd: optimized settings)
-assign elevationpenaltybuffer   = 10
+assign elevationpenaltybuffer   = 5
 assign elevationmaxbuffer       = 10
 assign elevationbufferreduce    = 0
 
