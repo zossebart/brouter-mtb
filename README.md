@@ -59,3 +59,8 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 * add parameter to allow ferries (default off)
 * add parameter to allow steps (default on)
 * adapt default kinematic parameters for more realistic ETA
+
+### v1.2.3 ###
+* fix elevation filtering default settings
+* make ntb_hard_factor param an enum to restrict it to the designed range
+* rearrange paramters to a more sensible order
