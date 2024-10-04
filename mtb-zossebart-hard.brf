@@ -21,8 +21,7 @@ assign validForFoot             = false
 assign is_wet                   = false           # %is_wet% | Choose a safer route in wet conditions | boolean
 assign allow_ferries            = false           # %allow_ferries% | Allow ferries | boolean
 assign allow_steps              = true            # %allow_steps% | Allow steps | boolean
-
-assign mtb_hard_factor          = 2               # %mtb_hard_factor% | Difficulty of the route (0:xc/am...2:allmountain...4:enduro) | number
+assign mtb_hard_factor          = 2               # %mtb_hard_factor% | Difficulty of the route | [0=easy, 1=moderate, 2=demanding, 3=hard, 4=extreme/uncompromising]
 assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
 
 # the global elevation parameters
