@@ -8,20 +8,16 @@
 
 ---context:global   # following code refers to global config
 
-assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=oruxmaps-style]
-assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
-assign turnInstructionCatchingRange = 4
-
 # generate a bike route
 assign validForBikes            = true
 assign validForCars             = false
 assign validForFoot             = false
 
 # Locus nav interface flags
+assign mtb_hard_factor          = 0               # %mtb_hard_factor% | Difficulty of the route | [0=easy, 1=moderate, 2=demanding, 3=hard, 4=extreme/uncompromising]
 assign is_wet                   = false           # %is_wet% | Choose a safer route in wet conditions | boolean
 assign allow_ferries            = false           # %allow_ferries% | Allow ferries | boolean
 assign allow_steps              = true            # %allow_steps% | Allow steps | boolean
-assign mtb_hard_factor          = 0               # %mtb_hard_factor% | Difficulty of the route | [0=easy, 1=moderate, 2=demanding, 3=hard, 4=extreme/uncompromising]
 assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
 
 # the global elevation parameters
@@ -41,6 +37,10 @@ assign maxSpeed   = 35     # %maxSpeed% | Absolute maximum speed (in km/h), for 
 assign S_C_x      = 0.75   # %S_C_x% | Drag coefficient times the reference area (in m^2), for travel time computation | number
 assign C_r        = 0.02   # %C_r% | Rolling resistance coefficient (dimensionless), for travel time computation | number
 assign bikerPower = 180    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
+
+assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=oruxmaps-style]
+assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
+assign turnInstructionCatchingRange = 4
 
 # ++++++++++++++++++++++++++++++++++++++ some global defines for finetuning
 
