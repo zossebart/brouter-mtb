@@ -72,7 +72,7 @@ assign dh_penalty               = max 0 ( add 2.0 ( multiply mtb_hard_factor 0.5
                                                    # additional penalty for undesired downhills (e.g. major roads)
 assign dh_difficult_penalty     = max 0 ( sub 10 ( multiply mtb_hard_factor 1 ) )                
                                                    # additional downhill penalty for ways with high difficulty (mtb/sac_scale)
-assign dh_use_tracks            = lesser mtb_hard_factor 0
+assign dh_use_tracks            = lesser mtb_hard_factor 1
                                                    # use less penalty for downhill tracks than for other waytypes? (0/1)
                                                    # enables/disables dh_track_penalty
 assign dh_track_penalty         = multiply 0.75 dh_penalty 
