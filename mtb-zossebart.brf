@@ -19,6 +19,7 @@ assign is_wet                   = false           # %is_wet% | Choose a safer ro
 assign allow_ferries            = false           # %allow_ferries% | Allow ferries | boolean
 assign allow_steps              = true            # %allow_steps% | Allow steps | boolean
 assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
+assign use_sidewalks            = true            # %use_sidewalks% | Reduce penalty for major roads that have a sidewalk | boolean
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
@@ -140,7 +141,7 @@ assign ismultilane              = if lanes=
 #
 assign penalty_reduce           = if has_cycleway 
                                     then isbike_reduce 
-                                    else if has_foot 
+                                    else if and use_sidewalks has_foot
                                       then isfoot_reduce 
                                       else 1 
 
