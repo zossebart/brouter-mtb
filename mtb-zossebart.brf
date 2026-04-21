@@ -20,6 +20,7 @@ assign allow_ferries            = false           # %allow_ferries% | Allow ferr
 assign allow_steps              = true            # %allow_steps% | Allow steps | boolean
 assign use_uncertain_gates      = false           # %use_uncertain_gates% | Route through gates with no access info (might be locked) | boolean
 assign use_sidewalks            = true            # %use_sidewalks% | Reduce penalty for major roads that have a sidewalk | boolean
+assign road_factor              = 0               # %road_factor% | how much to reduce the major road (primary, secondary etc.) avoidance | [0=0, 1=1, 2=2, 3=3, 4=4, 5=5]
 
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
@@ -204,7 +205,9 @@ assign hw_penalty =
   else if highway=construction                         then construction_penalty
                                                        else 0
 
+assign road_reduce = max 0.001 ( sub 1 multiply road_factor 0.2 )
 assign hw_major_penalty =
+  multiply  road_reduce
   multiply  if islowspeed                                      # reduce the penalty if the speedlimit is low
               then 0.75
               else 1
