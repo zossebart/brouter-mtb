@@ -22,6 +22,8 @@ assign use_uncertain_gates      = false           # %use_uncertain_gates% | Rout
 assign use_sidewalks            = true            # %use_sidewalks% | Reduce penalty for major roads that have a sidewalk | boolean
 assign road_factor              = 0               # %road_factor% | how much to reduce the major road (primary, secondary etc.) avoidance | [0=0, 1=1, 2=2, 3=3, 4=4, 5=5]
 
+assign road_reduce              = max 0.001 ( sub 1 multiply road_factor 0.2 )
+
 # the global elevation parameters
 assign downhillcost             = max 0 ( sub 30 ( multiply mtb_hard_factor 10 ) )
 assign downhillcutoff           = 4
@@ -205,9 +207,7 @@ assign hw_penalty =
   else if highway=construction                         then construction_penalty
                                                        else 0
 
-assign road_reduce = max 0.001 ( sub 1 multiply road_factor 0.2 )
 assign hw_major_penalty =
-  multiply  road_reduce
   multiply  if islowspeed                                      # reduce the penalty if the speedlimit is low
               then 0.75
               else 1
@@ -506,7 +506,7 @@ assign costfactor =
     add tracktype_penalty
     max 1
     if hw_penalty                                       then hw_penalty
-    else if hw_major_penalty                            then hw_major_penalty
+    else if hw_major_penalty                            then multiply  road_reduce hw_major_penalty
     else if hw_minor_penalty                            then hw_minor_penalty
 
     else if highway=path                                then 1
@@ -551,7 +551,7 @@ assign uphillcostfactor =
                                                         else 0
       max 1
       if hw_penalty                                     then hw_penalty
-      else if hw_major_penalty                          then multiply penalty_reduce hw_major_penalty
+      else if hw_major_penalty                          then multiply multiply penalty_reduce road_reduce hw_major_penalty
       else if hw_minor_penalty                          then hw_minor_penalty 
 
       else if highway=path                              then uh_penalty
