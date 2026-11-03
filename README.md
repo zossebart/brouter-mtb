@@ -17,6 +17,10 @@ Also, there are some additional switches for special features:
 * allow_ferries: switch on and off the usage of ferries (default off)
 * allow_steps: wether the route can go over steps (default on)
 * use_uncertain_gates: wether passing of gates with unknown access restrictions is allowed or not. The default behaviour is to do not pass such gates. However, in some poorly mapped areas, it might be beneficial to enable this switch to avoid lots of big detours in the routing. Be aware that you could end up at a closed or restricted gate then!
+* use_sidewalks: wether to reduce the penalty for major roads when the have a sidewalk (default off)
+* road_factor: how much to allow major roads (in flat terrain and uphills)
+ * 0: avoid them
+ * 5: don't explicitly avoid them
 
 **CAUTION:** Locus ignores the default settings of the parameters when the profile is first configured! This means the _avoid_unpaved_ parameter is set to _false_, which leads to the creation of harder routes in profile versions prior to v1.1.0!
 Please enable _avoid_unpaved_ at the first setup if you want the default behaviour! This setting is global for all profiles configured in Locus.
@@ -64,3 +68,9 @@ Beginning from v1.1.0, the profile is split into two separate variants (normal/h
 * fix elevation filtering default settings
 * make ntb_hard_factor param an enum to restrict it to the designed range
 * rearrange paramters to a more sensible order
+
+### v1.3.0 ###
+* use tracks in downhills in easy mode
+* add sidewalk usage parameter
+* fine-tuning of the penalty for difficult downhills
+* add road penalty reduce parameter
